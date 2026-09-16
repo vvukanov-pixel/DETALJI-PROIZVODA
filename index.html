@@ -1,353 +1,72 @@
-<!DOCTYPE html>
-<html lang="hr">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Baza Detalja Stolarije</title>
-  <style>
-    :root {
-      --primary: #1e3a8a;
-      --danger: #b91c1c;
-      --bg: #f1f5f9;
-      --panel: #ffffff;
-      --border: #cbd5e1;
-      --text: #0f172a;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
-    body { background-color: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
-
-    #sidebar {
-      width: 400px;
-      min-width: 380px;
-      background: var(--panel);
-      border-right: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-      box-shadow: 2px 0 8px rgba(0,0,0,0.05);
-      z-index: 10;
-    }
-    .sidebar-header { padding: 16px 20px; background: var(--primary); color: white; }
-    .sidebar-header h2 { font-size: 1.15rem; font-weight: 700; }
-    .sidebar-header p { font-size: 0.75rem; opacity: 0.85; margin-top: 3px; }
-    .sidebar-content { padding: 18px 20px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 12px; }
-    .form-group { display: flex; flex-direction: column; gap: 4px; }
-    label { font-size: 0.8rem; font-weight: 600; color: #475569; text-transform: uppercase; }
-    select, input {
-      padding: 8px 10px;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      font-size: 0.88rem;
-      background: #f8fafc;
-      outline: none;
-    }
-    .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .section-title {
-      font-size: 0.75rem;
-      font-weight: 700;
-      color: var(--primary);
-      text-transform: uppercase;
-      border-bottom: 2px solid #e2e8f0;
-      padding-bottom: 4px;
-      margin-top: 6px;
-    }
-
-    /* UPLOAD I DATABASE MODUL */
-    .upload-box {
-      border: 2px dashed #94a3b8;
-      border-radius: 6px;
-      padding: 10px;
-      text-align: center;
-      background: #f8fafc;
-      cursor: pointer;
-      font-size: 0.8rem;
-    }
-    .btn-delete {
-      background: var(--danger);
-      color: white;
-      border: none;
-      padding: 7px 10px;
-      font-size: 0.78rem;
-      font-weight: 600;
-      border-radius: 5px;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 5px;
-    }
-    .btn-action {
-      background: var(--primary);
-      color: white;
-      border: none;
-      padding: 10px;
-      font-size: 0.9rem;
-      font-weight: 600;
-      border-radius: 6px;
-      cursor: pointer;
-      margin-top: 5px;
-    }
-
-    /* WORKSPACE & SHEET */
-    #main { flex: 1; display: flex; background: #94a3b8; overflow-y: auto; padding: 25px; justify-content: center; }
-    .sheet-page {
-      background: white;
-      width: 1050px;
-      min-height: 750px;
-      border: 2px solid #000;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-    }
-    .sheet-body { display: grid; grid-template-columns: 1fr 1.3fr; gap: 15px; height: 500px; }
-    .drawing-box {
-      border: 1px solid #94a3b8;
-      border-radius: 4px;
-      position: relative;
-      background: #fff;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-    .drawing-box-header {
-      font-size: 0.75rem;
-      font-weight: 700;
-      background: #f1f5f9;
-      border-bottom: 1px solid #cbd5e1;
-      padding: 6px 10px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .drawing-container {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-      overflow: hidden;
-      background: #ffffff;
-    }
-    .drawing-container img {
-      max-width: 100%;
-      max-height: 100%;
-      object-fit: contain;
-    }
-    .drawing-container svg { width: 100%; height: 100%; }
-
-    /* TABLICA LISTA */
-    .sheet-footer {
-      border: 2px solid #000;
-      display: grid;
-      grid-template-columns: 260px 300px 1fr 160px;
-      margin-top: 15px;
-      background: #fff;
-    }
-    .footer-col { border-right: 1px solid #000; padding: 8px 12px; font-size: 0.75rem; line-height: 1.35; }
-    .footer-col:last-child { border-right: none; }
-    .footer-title { font-weight: 700; text-transform: uppercase; margin-bottom: 4px; border-bottom: 1px solid #e2e8f0; padding-bottom: 2px; }
-    .pos-badge { font-size: 1.8rem; font-weight: 900; text-align: center; margin-top: 10px; }
-
-    @media print {
-      body { background: white; height: auto; overflow: visible; }
-      #sidebar { display: none; }
-      #main { padding: 0; background: white; }
-      .sheet-page { width: 100%; height: 100vh; border: 2px solid #000; }
-    }
-  </style>
-</head>
-<body>
-
-  <aside id="sidebar">
-    <div class="sidebar-header">
-      <h2>BAZA DETALJA I PROFILA</h2>
-      <p>Izmjena dimenzija i unos pravih nacrta</p>
-    </div>
-
-    <div class="sidebar-content">
-      <div class="form-group">
-        <label for="systemSelect">Odaberite sistem</label>
-        <select id="systemSelect" onchange="loadSystemDetails()">
-          <option value="ALUPLAST_AD">ALUPLAST AD</option>
-          <option value="ALUPLAST_MD_NEO">ALUPLAST MD NEO</option>
-          <option value="ALUPLAST_SMART_SLIDE_NEO">Aluplast SMART SLIDE NEO</option>
-          <option value="ALUPLAST_HST">ALUPLAST HST</option>
-          <option value="ALUPROF_MB_79N_VRATA">ALUPROF MB 79N VRATA</option>
-          <option value="ALUPROF_MB_79N_PROZORI" selected>ALUPROF MB 79N PROZORI</option>
-          <option value="ALUPROF_MB_59HS_2K">ALUPROF MB 59 HS DVOKLIZNI</option>
-          <option value="ALUPROF_MB_59HS_3K_SVE">ALUPROF MB 59 HS TROKLIZNI SVE KLIZE</option>
-          <option value="ALUPROF_MB_59HS_2FIX_1K">ALUPROF MB 59 HS DVA FIX JEDAN KLIZNI</option>
-          <option value="ALUPROF_MB_77HS_3K_SVE">ALUPROF MB 77 HS TROKLIZNI SVE KLIZE</option>
-          <option value="ALUPROF_MB_77HS_2FIX_1K">ALUPROF MB 77 HS DVA FIX JEDAN KLIZNI</option>
-        </select>
-      </div>
-
-      <!-- UPRAVLJANJE DETALJEM ZA TRENUTNI PROFIL -->
-      <div class="section-title">Upload pravog detalja u bazu</div>
-      <div class="upload-box" onclick="document.getElementById('fileUpload').click()">
-        <strong>Kliknite za učitavanje nacrta</strong>
-        <div style="font-size:0.7rem; color:#64748b; margin-top:2px;">(Podržano: PNG, JPG, SVG presjeci)</div>
-        <input type="file" id="fileUpload" accept="image/*,.svg" style="display:none;" onchange="handleFileUpload(event)">
-      </div>
-      <button class="btn-delete" onclick="removeCurrentDetail()">Izbriši / Ukloni crtež profila</button>
-
-      <div class="section-title">Promjena dimenzija (mm)</div>
-      <div class="row-2">
-        <div class="form-group">
-          <label>Širina (W)</label>
-          <input type="number" id="dimWidth" value="1390" oninput="renderApp()" />
-        </div>
-        <div class="form-group">
-          <label>Visina (H)</label>
-          <input type="number" id="dimHeight" value="1960" oninput="renderApp()" />
-        </div>
-      </div>
-      <div class="row-2">
-        <div class="form-group">
-          <label>Pozicija</label>
-          <input type="text" id="posName" value="P01" oninput="renderApp()" />
-        </div>
-        <div class="form-group">
-          <label>Projekt</label>
-          <input type="text" id="projectName" value="GENER-2" oninput="renderApp()" />
-        </div>
-      </div>
-
-      <div class="section-title">Građevinski detalji i staklo</div>
-      <div class="row-2">
-        <div class="form-group">
-          <label>Zid (mm)</label>
-          <input type="number" id="wallThick" value="200" oninput="renderApp()" />
-        </div>
-        <div class="form-group">
-          <label>Fasada (mm)</label>
-          <input type="number" id="insulThick" value="150" oninput="renderApp()" />
-        </div>
-      </div>
-      <div class="row-2">
-        <div class="form-group">
-          <label>Boja profila</label>
-          <input type="text" id="ralColor" value="RAL 9006" oninput="renderApp()" />
-        </div>
-        <div class="form-group">
-          <label>Ug (W/m²K)</label>
-          <input type="text" id="coefUg" value="0.5" oninput="renderApp()" />
-        </div>
-      </div>
-      <div class="form-group">
-        <label>Sastav stakla</label>
-        <input type="text" id="glassDesc" value="4 Float - 18 Ar - 6 Float - 18 Ar - 4 Low-E" oninput="renderApp()" />
-      </div>
-
-      <button class="btn-action" onclick="window.print()">Ispiši / Spremi List u PDF</button>
-    </div>
-  </aside>
-
-  <main id="main">
-    <div class="sheet-page">
-      <div class="sheet-body">
-        
-        <!-- POGLED / SHEMA -->
-        <div class="drawing-box">
-          <div class="drawing-box-header">POGLED POZICIJE S KOTAMA (M 1:20)</div>
-          <div class="drawing-container">
-            <svg id="svgElevation" viewBox="0 0 350 400"></svg>
-          </div>
-        </div>
-
-        <!-- PRAVI DETALJ IZ BAZE (UČITANA SLIKA/VEKTOR ILI SKICA) -->
-        <div class="drawing-box">
-          <div class="drawing-box-header">
-            <span>DETALJ PRESJEKA IZ BAZE (M 1:10)</span>
-            <span id="detailStatus" style="color:#059669; font-size:0.7rem;"></span>
-          </div>
-          <div class="drawing-container" id="detailContainer">
-            <!-- Ovdje se dinamički prikazuje uploadani detalj ili placeholder -->
-          </div>
-        </div>
-
-      </div>
-
-      <!-- ZAGLAVLJE -->
-      <div class="sheet-footer">
-        <div class="footer-col">
-          <div class="footer-title">Obrada / Boje:</div>
-          <div>Profili iznutra: <strong id="lblRalIn">RAL 9006</strong></div>
-          <div>Profili izvana: <strong id="lblRalOut">RAL 9006</strong></div>
-          <div>Limovi: <strong id="lblRalSheet">RAL 9006</strong></div>
-          <div style="margin-top:4px;">Brtve: EPDM crna</div>
-        </div>
-
-        <div class="footer-col">
-          <div class="footer-title">Sistem i Koeficijenti:</div>
-          <div>Sistem: <strong id="lblSysName">ALUPROF MB 79N</strong></div>
-          <div>Uf = <span id="lblUfVal">0.83</span> W/m²K</div>
-          <div style="font-weight:700; margin-top:3px;">Staklo 48mm:</div>
-          <div style="font-size:0.68rem;" id="lblGlassDetail">4 Float / 18 Ar / 6 / 18 Ar / 4 Low-E</div>
-          <div style="font-size:0.68rem;">Ug = <span id="lblUgVal">0.5</span> W/m²K | g = 0.50 | 34 dB</div>
-        </div>
-
-        <div class="footer-col">
-          <div class="footer-title">Dokumentacija:</div>
-          <div>Projekt: <strong id="lblProjectName">GENER-2</strong></div>
-          <div>Zid / Fasada: <strong id="lblWallInfo">200 / 150 mm</strong></div>
-          <div>Datum: <strong id="lblDate">16.09.2026.</strong></div>
-          <div>Mjerilo: <strong>1:10 / 1:20</strong></div>
-        </div>
-
-        <div class="footer-col" style="background:#f8fafc; text-align:center;">
-          <div class="footer-title">POZICIJA</div>
-          <div class="pos-badge" id="lblPosBadge">P01</div>
-        </div>
-      </div>
-    </div>
-  </main>
-
-  <script>
-    // Baza sustava (koeficijenti i nazivi)
+// BAZA SUSTAVA S PUTANJAMA DO PRAVIH SLIKA NA GITHUBU
     const SYSTEMS_META = {
-      "ALUPLAST_AD": { name: "ALUPLAST AD", uf: "1.30", isSliding: false },
-      "ALUPLAST_MD_NEO": { name: "ALUPLAST MD NEO", uf: "0.92", isSliding: false },
-      "ALUPLAST_SMART_SLIDE_NEO": { name: "Aluplast SMART SLIDE NEO", uf: "1.20", isSliding: true },
-      "ALUPLAST_HST": { name: "ALUPLAST HST", uf: "1.10", isSliding: true },
-      "ALUPROF_MB_79N_VRATA": { name: "ALUPROF MB 79N VRATA", uf: "1.10", isSliding: false },
-      "ALUPROF_MB_79N_PROZORI": { name: "ALUPROF MB 79N PROZORI", uf: "0.83", isSliding: false },
-      "ALUPROF_MB_59HS_2K": { name: "ALUPROF MB 59 HS DVOKLIZNI", uf: "1.40", isSliding: true },
-      "ALUPROF_MB_59HS_3K_SVE": { name: "ALUPROF MB 59 HS TROKLIZNI SVE KLIZE", uf: "1.45", isSliding: true },
-      "ALUPROF_MB_59HS_2FIX_1K": { name: "ALUPROF MB 59 HS DVA FIX JEDAN KLIZNI", uf: "1.40", isSliding: true },
-      "ALUPROF_MB_77HS_3K_SVE": { name: "ALUPROF MB 77 HS TROKLIZNI SVE KLIZE", uf: "0.84", isSliding: true },
-      "ALUPROF_MB_77HS_2FIX_1K": { name: "ALUPROF MB 77 HS DVA FIX JEDAN KLIZNI", uf: "0.84", isSliding: true }
-    };
-
-    // Učitavanje i spremanje uploadanih detalja u bazu preglednika (localStorage)
-    function handleFileUpload(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-
-      const sysKey = document.getElementById("systemSelect").value;
-      const reader = new FileReader();
-      
-      reader.onload = function(e) {
-        const base64Data = e.target.result;
-        try {
-          localStorage.setItem("detail_" + sysKey, base64Data);
-          loadSystemDetails();
-        } catch(err) {
-          alert("Slika je prevelika za lokalnu memoriju! Preporučuje se PNG/JPG do 2-3MB.");
-        }
-      };
-      reader.readAsDataURL(file);
-    }
-
-    // Brisanje crteža za trenutni profil
-    function removeCurrentDetail() {
-      const sysKey = document.getElementById("systemSelect").value;
-      if (confirm("Želite li izbrisati učitani detalj za: " + SYSTEMS_META[sysKey].name + "?")) {
-        localStorage.removeItem("detail_" + sysKey);
-        loadSystemDetails();
+      "ALUPLAST_AD": { 
+        name: "ALUPLAST AD", 
+        uf: "1.30", 
+        isSliding: false,
+        defaultImg: "detalji/aluplast_ad.png" 
+      },
+      "ALUPLAST_MD_NEO": { 
+        name: "ALUPLAST MD NEO", 
+        uf: "0.92", 
+        isSliding: false,
+        defaultImg: "detalji/aluplast_md_neo.png"
+      },
+      "ALUPLAST_SMART_SLIDE_NEO": { 
+        name: "Aluplast SMART SLIDE NEO", 
+        uf: "1.20", 
+        isSliding: true,
+        defaultImg: "detalji/aluplast_smart_slide.png"
+      },
+      "ALUPLAST_HST": { 
+        name: "ALUPLAST HST", 
+        uf: "1.10", 
+        isSliding: true,
+        defaultImg: "detalji/aluplast_hst.png"
+      },
+      "ALUPROF_MB_79N_VRATA": { 
+        name: "ALUPROF MB 79N VRATA", 
+        uf: "1.10", 
+        isSliding: false,
+        defaultImg: "detalji/aluprof_mb79n_vrata.png"
+      },
+      "ALUPROF_MB_79N_PROZORI": { 
+        name: "ALUPROF MB 79N PROZORI", 
+        uf: "0.83", 
+        isSliding: false,
+        defaultImg: "detalji/aluprof_mb79n_prozori.png"
+      },
+      "ALUPROF_MB_59HS_2K": { 
+        name: "ALUPROF MB 59 HS DVOKLIZNI", 
+        uf: "1.40", 
+        isSliding: true,
+        defaultImg: "detalji/aluprof_mb59hs_2k.png"
+      },
+      "ALUPROF_MB_59HS_3K_SVE": { 
+        name: "ALUPROF MB 59 HS TROKLIZNI SVE KLIZE", 
+        uf: "1.45", 
+        isSliding: true,
+        defaultImg: "detalji/aluprof_mb59hs_3k.png"
+      },
+      "ALUPROF_MB_59HS_2FIX_1K": { 
+        name: "ALUPROF MB 59 HS DVA FIX JEDAN KLIZNI", 
+        uf: "1.40", 
+        isSliding: true,
+        defaultImg: "detalji/aluprof_mb59hs_fix.png"
+      },
+      "ALUPROF_MB_77HS_3K_SVE": { 
+        name: "ALUPROF MB 77 HS TROKLIZNI SVE KLIZE", 
+        uf: "0.84", 
+        isSliding: true,
+        defaultImg: "detalji/aluprof_mb77hs_3k.png"
+      },
+      "ALUPROF_MB_77HS_2FIX_1K": { 
+        name: "ALUPROF MB 77 HS DVA FIX JEDAN KLIZNI", 
+        uf: "0.84", 
+        isSliding: true,
+        defaultImg: "detalji/aluprof_mb77hs_fix.png"
       }
-    }
+    };
 
     function loadSystemDetails() {
       const sysKey = document.getElementById("systemSelect").value;
@@ -355,17 +74,20 @@
       const detailContainer = document.getElementById("detailContainer");
       const statusLabel = document.getElementById("detailStatus");
       
-      const storedImage = localStorage.getItem("detail_" + sysKey);
+      // 1. Provjeri je li korisnik ručno učitao novi detalj preko preglednika
+      const customImg = localStorage.getItem("detail_" + sysKey);
+      // 2. Ako nije, uzmi originalnu sliku iz baze na GitHubu
+      const imgSrc = customImg || sys.defaultImg;
 
-      if (storedImage) {
-        detailContainer.innerHTML = `<img src="${storedImage}" alt="Detalj ${sys.name}">`;
-        statusLabel.innerText = "● Učitano iz baze";
+      if (imgSrc) {
+        detailContainer.innerHTML = `<img src="${imgSrc}" alt="Detalj ${sys.name}" onerror="this.parentElement.innerHTML='<div style=padding:20px;color:#94a3b8;text-align:center>Slika ${sys.defaultImg} još nije učitana na GitHub.</div>'">`;
+        statusLabel.innerText = customImg ? "● Korisnički izmijenjeno" : "● Standardni detalj iz baze";
         statusLabel.style.color = "#059669";
       } else {
         detailContainer.innerHTML = `
           <div style="text-align:center; color:#94a3b8; padding:20px;">
             <p style="font-weight:600; margin-bottom:6px;">Nema učitanog detalja za ovaj sustav</p>
-            <p style="font-size:0.75rem;">Kliknite "Učitaj nacrt" u lijevom izborniku za upload PNG/JPG/SVG detalja</p>
+            <p style="font-size:0.75rem;">Učitajte sliku na GitHub ili kliknite upload s lijeve strane.</p>
           </div>
         `;
         statusLabel.innerText = "○ Prazno";
@@ -374,77 +96,3 @@
 
       renderApp();
     }
-
-    function renderApp() {
-      const sysKey = document.getElementById("systemSelect").value;
-      const sys = SYSTEMS_META[sysKey];
-
-      const W = parseFloat(document.getElementById("dimWidth").value) || 1000;
-      const H = parseFloat(document.getElementById("dimHeight").value) || 1000;
-      const pos = document.getElementById("posName").value;
-      const proj = document.getElementById("projectName").value;
-      const ral = document.getElementById("ralColor").value;
-      const glass = document.getElementById("glassDesc").value;
-      const ug = document.getElementById("coefUg").value;
-      const wall = document.getElementById("wallThick").value;
-      const insul = document.getElementById("insulThick").value;
-
-      // Tablica
-      document.getElementById("lblRalIn").innerText = ral;
-      document.getElementById("lblRalOut").innerText = ral;
-      document.getElementById("lblRalSheet").innerText = ral;
-      document.getElementById("lblSysName").innerText = sys.name;
-      document.getElementById("lblUfVal").innerText = sys.uf;
-      document.getElementById("lblGlassDetail").innerText = glass;
-      document.getElementById("lblUgVal").innerText = ug;
-      document.getElementById("lblProjectName").innerText = proj;
-      document.getElementById("lblPosBadge").innerText = pos;
-      document.getElementById("lblWallInfo").innerText = `${wall} / ${insul} mm`;
-
-      // Crtanje sheme
-      drawElevationScheme(W, H, sys);
-    }
-
-    function drawElevationScheme(W, H, sys) {
-      const svg = document.getElementById("svgElevation");
-      svg.innerHTML = "";
-
-      const ox = 50, oy = 35;
-      const maxW = 250, maxH = 290;
-      const scale = Math.min(maxW / W, maxH / H);
-      const dW = W * scale;
-      const dH = H * scale;
-
-      let s = `<rect x="${ox}" y="${oy}" width="${dW}" height="${dH}" fill="#f8fafc" stroke="#111" stroke-width="2"/>`;
-
-      if (!sys.isSliding) {
-        // Klasični prozor
-        s += `<rect x="${ox+10}" y="${oy+10}" width="${dW-20}" height="${dH-20}" fill="#e0f2fe" stroke="#333" stroke-width="1.2"/>`;
-        s += `<line x1="${ox+10}" y1="${oy+dH-10}" x2="${ox+dW-10}" y2="${oy+dH/2}" stroke="#0284c7" stroke-dasharray="3,3"/>`;
-        s += `<line x1="${ox+10}" y1="${oy+10}" x2="${ox+dW-10}" y2="${oy+dH/2}" stroke="#0284c7" stroke-dasharray="3,3"/>`;
-      } else {
-        // Klizni
-        const panelW = (dW - 16) / 2;
-        s += `<rect x="${ox+8}" y="${oy+8}" width="${panelW}" height="${dH-16}" fill="#e0f2fe" stroke="#333" stroke-width="1.2"/>`;
-        s += `<rect x="${ox+8+panelW}" y="${oy+8}" width="${panelW}" height="${dH-16}" fill="#e0f2fe" stroke="#333" stroke-width="1.2"/>`;
-        s += `<line x1="${ox+panelW}" y1="${oy+dH/2}" x2="${ox+panelW+20}" y2="${oy+dH/2}" stroke="#000" stroke-width="1.5"/>`;
-      }
-
-      // Kote
-      const cotY = oy + dH + 25;
-      s += `<line x1="${ox}" y1="${cotY}" x2="${ox+dW}" y2="${cotY}" stroke="#111"/>`;
-      s += `<text x="${ox+dW/2}" y="${cotY-5}" font-size="11" font-weight="700" text-anchor="middle">${Math.round(W)} mm</text>`;
-
-      const cotX = ox - 20;
-      s += `<line x1="${cotX}" y1="${oy}" x2="${cotX}" y2="${oy+dH}" stroke="#111"/>`;
-      s += `<text x="${cotX-6}" y="${oy+dH/2}" font-size="11" font-weight="700" text-anchor="middle" transform="rotate(-90, ${cotX-6}, ${oy+dH/2})">${Math.round(H)} mm</text>`;
-
-      svg.innerHTML = s;
-    }
-
-    window.onload = function() {
-      loadSystemDetails();
-    };
-  </script>
-</body>
-</html>
