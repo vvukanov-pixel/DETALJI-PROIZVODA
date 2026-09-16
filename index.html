@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Generator Tehničkih Detalja Stolarije</title>
+  <style>
+    :root {
+      --primary: #1e3a8a;
+      --bg: #f1f5f9;
+      --panel: #ffffff;
+      --border: #cbd5e1;
+      --text: #0f172a;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
+
+    /* LIJEVI PANEL - UNOS */
+    #sidebar {
+      width: 380px;
+      min-width: 360px;
+      background: var(--panel);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      box-shadow: 2px 0 8px rgba(0,0,0,0.05);
+      z-index: 10;
+    }
+    .sidebar-header {
+      padding: 16px 20px;
+      background: var(--primary);
+      color: white;
+    }
+    .sidebar-header h2 { font-size: 1.15rem; font-weight: 700; }
+    .sidebar-header p { font-size: 0.75rem; opacity: 0.85; margin-top: 3px; }
+    .sidebar-content {
+      padding: 18px 20px;
+      overflow-y: auto;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .form-group { display: flex; flex-direction: column; gap: 4px; }
+    label { font-size: 0.8rem; font-weight: 600; color: #475569; text-transform: uppercase; letter-spacing: 0.03em; }
+    select, input {
+      padding: 9px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.9rem;
+      background: #f8fafc;
+      color: var(--text);
+      outline: none;
+      transition: border 0.15s ease;
+    }
+    select:focus, input:focus { border-color: var(--primary); background: #ffffff; }
+    .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .section-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 2px solid #e2e8f0;
+      padding-bottom: 4px;
+      margin-top: 6px;
+    }
+    .btn-action {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 12px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 6px;
+    }
+    .btn-action:hover { opacity: 0.92; }
+
+    /* DESNI PANEL - TEHNIČKI CRTEŽ (RADNA POVRŠINA) */
+    #main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: #cbd5e1;
+      overflow-y: auto;
+      padding: 30px;
+      align-items: center;
+    }
+    .sheet-page {
+      background: white;
+      width: 1050px;
+      min-height: 740px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+      border: 2px solid #000;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+    }
+    .sheet-body {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      height: 480px;
+    }
+    .drawing-box {
+      border: 1px solid #94a3b8;
+      border-radius: 4px;
+      position: relative;
+      background: #ffffff;
+      display: flex;
+      flex-direction: column;
+    }
+    .drawing-box-header {
+      font-size: 0.75rem;
+      font-weight: 700;
+      background: #f1f5f9;
+      border-bottom: 1px solid #cbd5e1;
+      padding: 4px 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .drawing-box svg { width: 100%; height: 100%; flex: 1; }
+
+    /* ZAGLAVLJE / TABLICA LISTA (Po uzoru na nacrt) */
+    .sheet-footer {
+      border: 2px solid #000;
+      display: grid;
+      grid-template-columns: 280px 280px 1fr 180px;
+      margin-top: 15px;
+      background: #fff;
+    }
+    .footer-col {
+      border-right: 1px solid #000;
+      padding: 8px 12px;
+      font-size: 0.75rem;
+      line-height: 1.35;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .footer-col:last-child { border-right: none; }
+    .footer-title { font-weight: 700; text-transform: uppercase; margin-bottom: 4px; font-size: 0.75rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 2px; }
+    .pos-badge {
+      font-size: 1.8rem;
+      font-weight: 900;
+      text-align: center;
+      margin: auto 0;
+      color: #000;
+    }
+
+    /* PRINT STIL */
+    @media print {
+      body { background: white; height: auto; overflow: visible; }
+      #sidebar { display: none; }
+      #main { padding: 0; background: white; }
+      .sheet-page { width: 100%; height: 100vh; box-shadow: none; border: 2px solid #000; page-break-after: always; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- LIJEVA STRANA: IZBORNIK I PARAMETRI -->
+  <aside id="sidebar">
+    <div class="sidebar-header">
+      <h2>DETALJI PROFILA</h2>
+      <p>Parametarski generator detalja i reza</p>
+    </div>
+
+    <div class="sidebar-content">
+      <!-- 1. SUSTAV IZBORNIK (Svih 11 sustava) -->
+      <div class="form-group">
+        <label for="systemSelect">Sistem profila</label>
+        <select id="systemSelect" onchange="updateSystemData()">
+          <option value="ALUPLAST_AD">ALUPLAST AD</option>
+          <option value="ALUPLAST_MD_NEO">ALUPLAST MD NEO</option>
+          <option value="ALUPLAST_SMART_SLIDE_NEO">Aluplast SMART SLIDE NEO</option>
+          <option value="ALUPLAST_HST">ALUPLAST HST</option>
+          <option value="ALUPROF_MB_79N_VRATA">ALUPROF MB 79N VRATA</option>
+          <option value="ALUPROF_MB_79N_PROZORI" selected>ALUPROF MB 79N PROZORI</option>
+          <option value="ALUPROF_MB_59HS_2K">ALUPROF MB 59 HS DVOKLIZNI</option>
+          <option value="ALUPROF_MB_59HS_3K_SVE">ALUPROF MB 59 HS TROKLIZNI SVE KLIZE</option>
+          <option value="ALUPROF_MB_59HS_2FIX_1K">ALUPROF MB 59 HS DVA FIX JEDAN KLIZNI</option>
+          <option value="ALUPROF_MB_77HS_3K_SVE">ALUPROF MB 77 HS TROKLIZNI SVE KLIZE</option>
+          <option value="ALUPROF_MB_77HS_2FIX_1K">ALUPROF MB 77 HS DVA FIX JEDAN KLIZNI</option>
+        </select>
+      </div>
+
+      <!-- 2. OZNAKA I PROJEKT -->
+      <div class="row-2">
+        <div class="form-group">
+          <label for="posName">Oznaka Pozicije</label>
+          <input type="text" id="posName" value="P01" oninput="renderDrawing()" />
+        </div>
+        <div class="form-group">
+          <label for="projectName">Projekt / Objekt</label>
+          <input type="text" id="projectName" value="GENER-2" oninput="renderDrawing()" />
+        </div>
+      </div>
+
+      <div class="section-title">Dimenzije građevinskog otvora (mm)</div>
+      <div class="row-2">
+        <div class="form-group">
+          <label for="dimWidth">Širina (W)</label>
+          <input type="number" id="dimWidth" value="1390" step="5" oninput="renderDrawing()" />
+        </div>
+        <div class="form-group">
+          <label for="dimHeight">Visina (H)</label>
+          <input type="number" id="dimHeight" value="1960" step="5" oninput="renderDrawing()" />
+        </div>
+      </div>
+
+      <div class="row-2">
+        <div class="form-group">
+          <label for="dimH1">Visina donjeg polja</label>
+          <input type="number" id="dimH1" value="980" step="5" oninput="renderDrawing()" />
+        </div>
+        <div class="form-group">
+          <label for="dimH2">Visina gornjeg polja</label>
+          <input type="number" id="dimH2" value="980" step="5" readonly />
+        </div>
+      </div>
+
+      <div class="section-title">Građevinski detalj (Zid i Fasada)</div>
+      <div class="row-2">
+        <div class="form-group">
+          <label for="wallThick">Zub zida (mm)</label>
+          <input type="number" id="wallThick" value="200" step="10" oninput="renderDrawing()" />
+        </div>
+        <div class="form-group">
+          <label for="insulThick">Izolacija / Špaleta</label>
+          <input type="number" id="insulThick" value="150" step="10" oninput="renderDrawing()" />
+        </div>
+      </div>
+      <div class="row-2">
+        <div class="form-group">
+          <label for="shutterBox">Kutija rolete (mm)</label>
+          <input type="number" id="shutterBox" value="220" step="5" oninput="renderDrawing()" />
+        </div>
+        <div class="form-group">
+          <label for="ralColor">RAL Boja profila</label>
+          <input type="text" id="ralColor" value="RAL 9006" oninput="renderDrawing()" />
+        </div>
+      </div>
+
+      <div class="section-title">Staklo i Koeficijenti</div>
+      <div class="form-group">
+        <label for="glassDesc">Sastav stakla</label>
+        <input type="text" id="glassDesc" value="4 Float - 18 Ar - 6 Float - 18 Ar - 4 Low-E" oninput="renderDrawing()" />
+      </div>
+      <div class="row-2">
+        <div class="form-group">
+          <label for="coefUg">Ug (W/m²K)</label>
+          <input type="text" id="coefUg" value="0.5" oninput="renderDrawing()" />
+        </div>
+        <div class="form-group">
+          <label for="coefUf">Uf (W/m²K)</label>
+          <input type="text" id="coefUf" value="0.83" readonly />
+        </div>
+      </div>
+
+      <button class="btn-action" onclick="window.print()">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2m-12 0v4h12v-4M6 14h.01"></path></svg>
+        Ispiši / Spremi u PDF
+      </button>
+    </div>
+  </aside>
+
+  <!-- DESNA STRANA: LIST SA CRTEŽIMA I TABLICOM -->
+  <main id="main">
+    <div class="sheet-page" id="sheetPage">
+      
+      <!-- GORNJI DIO: CRTEŽI (SHEMA + DETALJNI PRESJECI) -->
+      <div class="sheet-body">
+        
+        <!-- POGLED / SHEMA POZICIJE S KOTAMA -->
+        <div class="drawing-box">
+          <div class="drawing-box-header">POGLED POZICIJE SA KOTAMA (M 1:20)</div>
+          <svg id="svgElevation" viewBox="0 0 450 420"></svg>
+        </div>
+
+        <!-- TEHNIČKI PRESJEK (HORIZONTALA ILI VERTIKALA SPOJA S FASADOM) -->
+        <div class="drawing-box">
+          <div class="drawing-box-header">PRESJEK UGRADNJE A-A / SPOJ S ROLETO-KUTIJOM (M 1:10)</div>
+          <svg id="svgSection" viewBox="0 0 450 420"></svg>
+        </div>
+
+      </div>
+
+      <!-- DONJI DIO: ZAGLAVLJE I SPECIFIKACIJA IDENTIČNA VAŠEM DOKUMENTU -->
+      <div class="sheet-footer">
+        
+        <!-- 1. POVRŠINE I BOJE -->
+        <div class="footer-col">
+          <div class="footer-title">Oberflächen / Obrada:</div>
+          <div>Profili iznutra: <strong id="lblRalIn">RAL 9006</strong></div>
+          <div>Profili izvana: <strong id="lblRalOut">RAL 9006</strong></div>
+          <div>Limovi iznutra: <strong id="lblRalSheetIn">RAL 9006</strong></div>
+          <div>Limovi izvana: <strong id="lblRalSheetOut">RAL 9006</strong></div>
+          <div style="margin-top:6px;">Brtve: EPDM crna</div>
+        </div>
+
+        <!-- 2. SUSTAV I STAKLO -->
+        <div class="footer-col">
+          <div class="footer-title">Sistem i Koeficijenti:</div>
+          <div>Sistem: <strong id="lblSysName">ALUPROF MB 79N</strong></div>
+          <div>Uf = <span id="lblUfVal">0.83</span> W/m²K</div>
+          <div style="margin-top:4px; font-weight:700;">Staklo 48mm Evolution:</div>
+          <div style="font-size:0.7rem;" id="lblGlassDetail">4 Float / 18 Ar / 6 / 18 Ar / 4 Low-E</div>
+          <div style="font-size:0.7rem;">Ug = <span id="lblUgVal">0.5</span> W/m²K | g = 0.50 | 34 dB</div>
+        </div>
+
+        <!-- 3. PROJEKT, DATUM, MJERILO -->
+        <div class="footer-col">
+          <div class="footer-title">Projektna dokumentacija:</div>
+          <div>Projekt: <strong id="lblProjectName">GENER-2</strong></div>
+          <div>Crtao/Obrada: <strong>ING / MB</strong></div>
+          <div>Datum: <strong id="lblDate">16.09.2026.</strong></div>
+          <div>Mjerilo: <strong>1:10 / 1:20</strong></div>
+          <div>Format: <strong>A4 / List Detalja</strong></div>
+        </div>
+
+        <!-- 4. VELIKA OZNAKA POZICIJE (P01...) -->
+        <div class="footer-col" style="background:#f8fafc; align-items:center;">
+          <div class="footer-title" style="width:100%; text-align:center;">POZICIJA</div>
+          <div class="pos-badge" id="lblPosBadge">P01</div>
+          <div style="font-size:0.7rem; font-weight:700; color:#64748b;" id="lblTypeShort">PROZOR</div>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+  <script>
+    // BAZA SPECIFIKACIJA ZA SVIH 11 SUSTAVA
+    const SYSTEMS_DB = {
+      "ALUPLAST_AD": {
+        name: "ALUPLAST Ideal 4000 AD",
+        material: "PVC",
+        type: "PROZOR / VRATA",
+        uf: "1.30",
+        depth: 70,
+        glassMax: 41,
+        shutterBox: 210,
+        defaultUg: "1.0",
+        defaultGlass: "4 Float - 16 Ar - 4 Low-E (24mm)",
+        isSliding: false
+      },
+      "ALUPLAST_MD_NEO": {
+        name: "ALUPLAST Energeto NEO MD",
+        material: "PVC",
+        type: "PROZOR / VRATA",
+        uf: "0.92",
+        depth: 76,
+        glassMax: 50,
+        shutterBox: 220,
+        defaultUg: "0.5",
+        defaultGlass: "4 Float - 18 Ar - 4 - 18 Ar - 4 Low-E (48mm)",
+        isSliding: false
+      },
+      "ALUPLAST_SMART_SLIDE_NEO": {
+        name: "Aluplast SMART SLIDE NEO",
+        material: "PVC KLIZNI",
+        type: "KLIZNA STIJENA",
+        uf: "1.20",
+        depth: 140,
+        glassMax: 42,
+        shutterBox: 220,
+        defaultUg: "0.6",
+        defaultGlass: "4 Float - 16 Ar - 4 - 16 Ar - 4 Low-E (44mm)",
+        isSliding: true
+      },
+      "ALUPLAST_HST": {
+        name: "ALUPLAST HST 85mm",
+        material: "PVC PODIZNO-KLIZNI",
+        type: "PODIZNO-KLIZNA",
+        uf: "1.10",
+        depth: 197,
+        glassMax: 51,
+        shutterBox: 240,
+        defaultUg: "0.5",
+        defaultGlass: "6 ESG - 16 Ar - 6 - 16 Ar - 6 Low-E (50mm)",
+        isSliding: true
+      },
+      "ALUPROF_MB_79N_VRATA": {
+        name: "ALUPROF MB-79N VRATA",
+        material: "ALU TERMO",
+        type: "ALU VRATA",
+        uf: "1.10",
+        depth: 79,
+        glassMax: 63,
+        shutterBox: 0,
+        defaultUg: "0.5",
+        defaultGlass: "4 Float - 18 Ar - 6 - 18 Ar - 4 Low-E (48mm)",
+        isSliding: false
+      },
+      "ALUPROF_MB_79N_PROZORI": {
+        name: "ALUPROF MB-79N PROZORI",
+        material: "ALU TERMO",
+        type: "ALU PROZOR",
+        uf: "0.83",
+        depth: 79,
+        glassMax: 63,
+        shutterBox: 220,
+        defaultUg: "0.5",
+        defaultGlass: "4 Float - 18 Ar - 6 Float - 18 Ar - 4 Low-E",
+        isSliding: false
+      },
+      "ALUPROF_MB_59HS_2K": {
+        name: "ALUPROF MB-59 HS DVOKLIZNI",
+        material: "ALU KLIZNI",
+        type: "PODIZNO-KLIZNI (A)",
+        uf: "1.40",
+        depth: 120,
+        glassMax: 42,
+        shutterBox: 220,
+        defaultUg: "0.6",
+        defaultGlass: "4 Float - 16 Ar - 4 - 16 Ar - 4 Low-E (44mm)",
+        isSliding: true,
+        scheme: "A (1 FIX + 1 KLIZNO)"
+      },
+      "ALUPROF_MB_59HS_3K_SVE": {
+        name: "ALUPROF MB 59 HS TROKLIZNI SVE KLIZE",
+        material: "ALU KLIZNI",
+        type: "PODIZNO-KLIZNI (3-TRAČNI)",
+        uf: "1.45",
+        depth: 180,
+        glassMax: 42,
+        shutterBox: 240,
+        defaultUg: "0.6",
+        defaultGlass: "4 Float - 16 Ar - 4 - 16 Ar - 4 Low-E",
+        isSliding: true,
+        scheme: "3-TRAČNO SVE KLIŽE"
+      },
+      "ALUPROF_MB_59HS_2FIX_1K": {
+        name: "ALUPROF MB 59 HS DVA FIX JEDAN KLIZNI",
+        material: "ALU KLIZNI",
+        type: "PODIZNO-KLIZNI (FIX-K-FIX)",
+        uf: "1.40",
+        depth: 180,
+        glassMax: 42,
+        shutterBox: 240,
+        defaultUg: "0.6",
+        defaultGlass: "4 Float - 16 Ar - 4 - 16 Ar - 4 Low-E",
+        isSliding: true,
+        scheme: "FIX + K + FIX"
+      },
+      "ALUPROF_MB_77HS_3K_SVE": {
+        name: "ALUPROF MB 77 HS TROKLIZNI SVE KLIZE",
+        material: "ALU PREMIUM KLIZNI",
+        type: "PODIZNO-KLIZNI (HI)",
+        uf: "0.84",
+        depth: 260,
+        glassMax: 58,
+        shutterBox: 240,
+        defaultUg: "0.5",
+        defaultGlass: "6 ESG - 18 Ar - 6 - 18 Ar - 6 Low-E (54mm)",
+        isSliding: true,
+        scheme: "3-TRAČNO (SVE KLIŽU)"
+      },
+      "ALUPROF_MB_77HS_2FIX_1K": {
+        name: "ALUPROF MB 77 HS DVA FIX JEDAN KLIZNI",
+        material: "ALU PREMIUM KLIZNI",
+        type: "PODIZNO-KLIZNI (HI)",
+        uf: "0.84",
+        depth: 260,
+        glassMax: 58,
+        shutterBox: 240,
+        defaultUg: "0.5",
+        defaultGlass: "6 ESG - 18 Ar - 6 - 18 Ar - 6 Low-E (54mm)",
+        isSliding: true,
+        scheme: "FIX + KLIZNO + FIX"
+      }
+    };
+
+    function updateSystemData() {
+      const sysKey = document.getElementById("systemSelect").value;
+      const sys = SYSTEMS_DB[sysKey];
+      if (!sys) return;
+
+      document.getElementById("coefUf").value = sys.uf;
+      document.getElementById("glassDesc").value = sys.defaultGlass;
+      document.getElementById("coefUg").value = sys.defaultUg;
+      if (sys.shutterBox > 0) {
+        document.getElementById("shutterBox").value = sys.shutterBox;
+      }
+      renderDrawing();
+    }
+
+    function renderDrawing() {
+      const sysKey = document.getElementById("systemSelect").value;
+      const sys = SYSTEMS_DB[sysKey];
+      
+      const W = parseFloat(document.getElementById("dimWidth").value) || 1200;
+      const H = parseFloat(document.getElementById("dimHeight").value) || 1400;
+      let H1 = parseFloat(document.getElementById("dimH1").value) || (H / 2);
+      
+      if (H1 >= H) {
+        H1 = Math.round(H / 2);
+        document.getElementById("dimH1").value = H1;
+      }
+      const H2 = H - H1;
+      document.getElementById("dimH2").value = H2;
+
+      const pos = document.getElementById("posName").value;
+      const proj = document.getElementById("projectName").value;
+      const ral = document.getElementById("ralColor").value;
+      const glass = document.getElementById("glassDesc").value;
+      const ug = document.getElementById("coefUg").value;
+      const wall = parseFloat(document.getElementById("wallThick").value) || 200;
+      const insul = parseFloat(document.getElementById("insulThick").value) || 150;
+      const box = parseFloat(document.getElementById("shutterBox").value) || 220;
+
+      // Popunjavanje donjeg zaglavlja
+      document.getElementById("lblRalIn").innerText = ral;
+      document.getElementById("lblRalOut").innerText = ral;
+      document.getElementById("lblRalSheetIn").innerText = ral;
+      document.getElementById("lblRalSheetOut").innerText = ral;
+      document.getElementById("lblSysName").innerText = sys.name;
+      document.getElementById("lblUfVal").innerText = sys.uf;
+      document.getElementById("lblGlassDetail").innerText = glass;
+      document.getElementById("lblUgVal").innerText = ug;
+      document.getElementById("lblProjectName").innerText = proj;
+      document.getElementById("lblPosBadge").innerText = pos;
+      document.getElementById("lblTypeShort").innerText = sys.type;
+
+      // CRTEŽ 1: POGLED POZICIJE S KOTAMA
+      drawElevation(W, H, H1, H2, sys);
+
+      // CRTEŽ 2: PRESJEK I DETALJ UGRADNJE U ZID
+      drawSection(W, H, wall, insul, box, sys);
+    }
+
+    function drawElevation(W, H, H1, H2, sys) {
+      const svg = document.getElementById("svgElevation");
+      svg.innerHTML = "";
+
+      const ox = 70, oy = 40;
+      const maxDrawW = 300, maxDrawH = 320;
+      const scale = Math.min(maxDrawW / W, maxDrawH / H);
+
+      const dW = W * scale;
+      const dH = H * scale;
+      const dH1 = H1 * scale;
+      const dH2 = H2 * scale;
+      const frameT = 12; // okvir u pixelima
+
+      let s = "";
+
+      // Vanjski doprozornik (Štok)
+      s += `<rect x="${ox}" y="${oy}" width="${dW}" height="${dH}" fill="#f8fafc" stroke="#111" stroke-width="2"/>`;
+
+      if (!sys.isSliding) {
+        // Klasični prozor s vodoravnim prečkom (Kao u vašem PDF-u)
+        // Gornje polje
+        s += `<rect x="${ox+frameT}" y="${oy+frameT}" width="${dW-2*frameT}" height="${dH2-1.5*frameT}" fill="#e0f2fe" stroke="#333" stroke-width="1.5"/>`;
+        // Gornji otklopni trokut (otvaranje)
+        s += `<line x1="${ox+frameT}" y1="${oy+dH2-frameT}" x2="${ox+dW/2}" y2="${oy+frameT}" stroke="#0284c7" stroke-width="1.2" stroke-dasharray="3,3"/>`;
+        s += `<line x1="${ox+dW-frameT}" y1="${oy+dH2-frameT}" x2="${ox+dW/2}" y2="${oy+frameT}" stroke="#0284c7" stroke-width="1.2" stroke-dasharray="3,3"/>`;
+
+        // Prečka
+        s += `<rect x="${ox}" y="${oy+dH2-frameT/2}" width="${dW}" height="${frameT}" fill="#cbd5e1" stroke="#111" stroke-width="1.5"/>`;
+
+        // Donje polje
+        s += `<rect x="${ox+frameT}" y="${oy+dH2+frameT/2}" width="${dW-2*frameT}" height="${dH1-1.5*frameT}" fill="#e0f2fe" stroke="#333" stroke-width="1.5"/>`;
+        // Zaokretno-otklopne linije (DK)
+        s += `<line x1="${ox+frameT}" y1="${oy+dH-frameT}" x2="${ox+dW-frameT}" y2="${oy+dH2+dH1/2}" stroke="#0284c7" stroke-width="1.2" stroke-dasharray="3,3"/>`;
+        s += `<line x1="${ox+frameT}" y1="${oy+dH2+frameT}" x2="${ox+dW-frameT}" y2="${oy+dH2+dH1/2}" stroke="#0284c7" stroke-width="1.2" stroke-dasharray="3,3"/>`;
+      } else {
+        // Klizne stijene (2-krilne ili 3-krilne)
+        const panels = sys.name.includes("TROKLIZNI") || sys.name.includes("DVA FIX") ? 3 : 2;
+        const panelW = (dW - 2*frameT) / panels;
+
+        for (let i = 0; i < panels; i++) {
+          const px = ox + frameT + i * panelW;
+          s += `<rect x="${px+3}" y="${oy+frameT+3}" width="${panelW-6}" height="${dH-2*frameT-6}" fill="#e0f2fe" stroke="#333" stroke-width="1.5"/>`;
+          // Strelica smjera klizanja
+          s += `<line x1="${px+panelW/2 - 15}" y1="${oy+dH/2}" x2="${px+panelW/2 + 15}" y2="${oy+dH/2}" stroke="#0f172a" stroke-width="2"/>`;
+          s += `<polyline points="${px+panelW/2+8},${oy+dH/2-5} ${px+panelW/2+15},${oy+dH/2} ${px+panelW/2+8},${oy+dH/2+5}" fill="none" stroke="#0f172a" stroke-width="2"/>`;
+        }
+      }
+
+      // KOTE: Širina na dnu
+      const cotY = oy + dH + 25;
+      s += `<line x1="${ox}" y1="${cotY}" x2="${ox+dW}" y2="${cotY}" stroke="#111" stroke-width="1.2"/>`;
+      s += `<line x1="${ox}" y1="${cotY-6}" x2="${ox}" y2="${cotY+6}" stroke="#111" stroke-width="1.2"/>`;
+      s += `<line x1="${ox+dW}" y1="${cotY-6}" x2="${ox+dW}" y2="${cotY+6}" stroke="#111" stroke-width="1.2"/>`;
+      s += `<text x="${ox+dW/2}" y="${cotY-5}" font-size="11" font-weight="700" text-anchor="middle" fill="#000">${Math.round(W)} mm</text>`;
+
+      // KOTE: Visina lijevo
+      const cotX = ox - 25;
+      s += `<line x1="${cotX}" y1="${oy}" x2="${cotX}" y2="${oy+dH}" stroke="#111" stroke-width="1.2"/>`;
+      s += `<line x1="${cotX-6}" y1="${oy}" x2="${cotX+6}" y2="${oy}" stroke="#111" stroke-width="1.2"/>`;
+      s += `<line x1="${cotX-6}" y1="${oy+dH}" x2="${cotX+6}" y2="${oy+dH}" stroke="#111" stroke-width="1.2"/>`;
+      s += `<text x="${cotX-8}" y="${oy+dH/2}" font-size="11" font-weight="700" text-anchor="middle" transform="rotate(-90, ${cotX-8}, ${oy+dH/2})" fill="#000">${Math.round(H)} mm</text>`;
+
+      // Oznake presjeka A-A i B-B
+      s += `<line x1="${ox-15}" y1="${oy+dH/2}" x2="${ox+dW+15}" y2="${oy+dH/2}" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="8,4"/>`;
+      s += `<text x="${ox-20}" y="${oy+dH/2+4}" font-size="12" font-weight="900" fill="#dc2626">A</text>`;
+      s += `<text x="${ox+dW+20}" y="${oy+dH/2+4}" font-size="12" font-weight="900" fill="#dc2626">A</text>`;
+
+      svg.innerHTML = s;
+    }
+
+    function drawSection(W, H, wall, insul, box, sys) {
+      const svg = document.getElementById("svgSection");
+      svg.innerHTML = "";
+
+      let s = "";
+      // Šrafura zida (Beton / Opeka)
+      s += `
+        <defs>
+          <pattern id="hatchWall" width="12" height="12" patternTransform="rotate(45 0 0)" patternUnits="userSpaceOnUse">
+            <line x1="0" y1="0" x2="0" y2="12" stroke="#64748b" stroke-width="1.5" />
+          </pattern>
+          <pattern id="hatchInsul" width="14" height="8" patternUnits="userSpaceOnUse">
+            <path d="M0,4 Q3.5,0 7,4 T14,4" fill="none" stroke="#eab308" stroke-width="1.5"/>
+          </pattern>
+        </defs>
+      `;
+
+      // 1. LIJEVA STRANA: Zid sa šrafurom
+      s += `<rect x="25" y="80" width="80" height="260" fill="url(#hatchWall)" stroke="#000" stroke-width="1.5"/>`;
+      // Zub zida i termoizolacija
+      s += `<rect x="105" y="80" width="30" height="140" fill="url(#hatchInsul)" stroke="#000" stroke-width="1.2"/>`;
+      s += `<text x="65" y="70" font-size="10" font-weight="700" text-anchor="middle">ZID ${wall}</text>`;
+      s += `<text x="120" y="70" font-size="10" font-weight="700" text-anchor="middle">FASADA ${insul}</text>`;
+
+      // 2. PROFILNI SKLOP (Doprozornik + krilo + staklo)
+      const px = 145;
+      // Vanjski štok (siva boja aluminija/pvc-a s termo-prekidom)
+      s += `<rect x="${px}" y="150" width="40" height="70" fill="#cbd5e1" stroke="#000" stroke-width="1.5"/>`;
+      s += `<rect x="${px+12}" y="158" width="16" height="54" fill="#000"/>`; // Termo most (poliamid)
+      
+      // Krilo
+      s += `<rect x="${px+42}" y="140" width="45" height="80" fill="#e2e8f0" stroke="#000" stroke-width="1.5"/>`;
+      s += `<rect x="${px+54}" y="150" width="16" height="60" fill="#000"/>`; // Termo most krila
+
+      // Troslojno staklo (48mm)
+      s += `<rect x="${px+90}" y="160" width="120" height="8" fill="#38bdf8" stroke="#0284c7" stroke-width="1"/>`;
+      s += `<rect x="${px+90}" y="172" width="120" height="8" fill="#38bdf8" stroke="#0284c7" stroke-width="1"/>`;
+      s += `<rect x="${px+90}" y="184" width="120" height="8" fill="#38bdf8" stroke="#0284c7" stroke-width="1"/>`;
+      s += `<text x="${px+150}" y="206" font-size="9" font-weight="600" text-anchor="middle" fill="#0369a1">STAKLO 48mm</text>`;
+
+      // Brtve (crne linije)
+      s += `<line x1="${px+40}" y1="152" x2="${px+40}" y2="218" stroke="#000" stroke-width="3"/>`;
+
+      // 3. DESNA STRANA: Roleto kutija (presjek sa spiralom lamele)
+      if (box > 0) {
+        const bx = 320;
+        s += `<rect x="${bx}" y="110" width="95" height="110" fill="#f8fafc" stroke="#000" stroke-width="2"/>`;
+        s += `<circle cx="${bx+47}" cy="165" r="38" fill="none" stroke="#475569" stroke-width="1.5" stroke-dasharray="4,3"/>`;
+        s += `<circle cx="${bx+47}" cy="165" r="26" fill="none" stroke="#475569" stroke-width="1.5"/>`;
+        s += `<circle cx="${bx+47}" cy="165" r="14" fill="#94a3b8" stroke="#000" stroke-width="1.5"/>`;
+        s += `<text x="${bx+47}" y="100" font-size="10" font-weight="700" text-anchor="middle">ROLETA ${box}mm</text>`;
+        
+        // Donja vodilica rolete
+        s += `<line x1="${bx+5}" y1="220" x2="${bx+5}" y2="300" stroke="#000" stroke-width="3"/>`;
+      }
+
+      // KOTA PRESJEKA
+      s += `<line x1="25" y1="350" x2="415" y2="350" stroke="#111" stroke-width="1.2"/>`;
+      s += `<line x1="25" y1="344" x2="25" y2="356" stroke="#111" stroke-width="1.2"/>`;
+      s += `<line x1="415" y1="344" x2="415" y2="356" stroke="#111" stroke-width="1.2"/>`;
+      s += `<text x="220" y="344" font-size="10" font-weight="700" text-anchor="middle">DETALJ SPOJA FASADE, PROFILA I ROLETO KUTIJE</text>`;
+
+      svg.innerHTML = s;
+    }
+
+    // Inicijalno crtanje kod učitavanja
+    window.onload = function() {
+      updateSystemData();
+    };
+  </script>
+</body>
+</html>
